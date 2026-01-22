@@ -1,0 +1,101 @@
+{
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {},
+    "triggers": {
+      "When_a_HTTP_request_is_received": {
+        "type": "Request",
+        "kind": "Http",
+        "inputs": {
+          "method": "POST",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "orderId": {
+                "type": "string"
+              },
+              "customerId": {
+                "type": "string"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "productId": {
+                      "type": "string"
+                    },
+                    "quantity": {
+                      "type": "integer"
+                    },
+                    "unitPrice": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            },
+            "required": ["orderId", "customerId", "items"]
+          }
+        },
+        "operationOptions": "EnableSchemaValidation"
+      }
+    },
+    "actions": {
+      "Transform_Items": {
+        "type": "Select",
+        "runAfter": {},
+        "inputs": {
+          "from": "@triggerBody()?['items']",
+          "select": {
+            "productId": "@item()?['productId']",
+            "quantity": "@item()?['quantity']",
+            "unitPrice": "@item()?['unitPrice']",
+            "lineTotal": "@mul(item()?['quantity'], item()?['unitPrice'])"
+          }
+        }
+      },
+      "Get_Line_Totals": {
+        "type": "Select",
+        "runAfter": {
+          "Transform_Items": ["Succeeded"]
+        },
+        "inputs": {
+          "from": "@body('Transform_Items')",
+          "select": "@item()?['lineTotal']"
+        }
+      },
+      "Calculate_Order_Total": {
+        "type": "Compose",
+        "runAfter": {
+          "Get_Line_Totals": ["Succeeded"]
+        },
+        "inputs": "@if(equals(length(body('Get_Line_Totals')), 0), 0, if(equals(length(body('Get_Line_Totals')), 1), body('Get_Line_Totals')[0], if(equals(length(body('Get_Line_Totals')), 2), add(body('Get_Line_Totals')[0], body('Get_Line_Totals')[1]), if(equals(length(body('Get_Line_Totals')), 3), add(add(body('Get_Line_Totals')[0], body('Get_Line_Totals')[1]), body('Get_Line_Totals')[2]), add(add(add(body('Get_Line_Totals')[0], body('Get_Line_Totals')[1]), body('Get_Line_Totals')[2]), body('Get_Line_Totals')[3])))))"
+      },
+      "Send_Order_Response": {
+        "type": "Response",
+        "runAfter": {
+          "Calculate_Order_Total": ["Succeeded"]
+        },
+        "inputs": {
+          "statusCode": 200,
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "success": true,
+            "orderId": "@triggerBody()?['orderId']",
+            "customerId": "@triggerBody()?['customerId']",
+            "processedItems": "@body('Transform_Items')",
+            "orderTotal": "@outputs('Calculate_Order_Total')",
+            "processedAt": "@utcNow()",
+            "status": "Processed"
+          }
+        }
+      }
+    },
+    "outputs": {}
+  },
+  "kind": "Stateful"
+}

@@ -1,0 +1,69 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "parameters": {},
+        "triggers": {
+            "When_a_HTTP_request_is_received": {
+                "type": "Request",
+                "kind": "Http",
+                "inputs": {
+                    "method": "POST",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "message": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "name"
+                        ]
+                    }
+                },
+                "operationOptions": "EnableSchemaValidation"
+            }
+        },
+        "actions": {
+            "Build_Greeting": {
+                "type": "Compose",
+                "inputs": "@concat('Hello 123-45, ', triggerBody()?['name'], '! Welcome to Logic App Standard.')",
+                "runAfter": {}
+            },
+            "Build_Final_Message": {
+                "type": "Compose",
+                "inputs": "@if(and(not(equals(triggerBody()?['message'], null)), not(equals(triggerBody()?['message'], ''))), concat(outputs('Build_Greeting'), ' Your message: ', triggerBody()?['message']), outputs('Build_Greeting'))",
+                "runAfter": {
+                    "Build_Greeting": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "Send_Response": {
+                "type": "Response",
+                "inputs": {
+                    "statusCode": 200,
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "body": {
+                        "success": true,
+                        "message": "@outputs('Build_Final_Message')",
+                        "timestamp": "@utcNow()",
+                        "workflowName": "HelloWorld"
+                    }
+                },
+                "runAfter": {
+                    "Build_Final_Message": [
+                        "Succeeded"
+                    ]
+                }
+            }
+        },
+        "outputs": {}
+    },
+    "kind": "Stateful"
+}
