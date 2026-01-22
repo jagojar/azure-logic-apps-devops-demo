@@ -5,24 +5,26 @@ This project demonstrates how to deploy a Logic App Standard with all required i
 ## Project Structure
 
 ```
-logapps-devops-demo/
-├── README.md                    # This documentation
-├── azure-pipelines.yml          # Azure DevOps CI/CD pipeline
-├── script.ps1                   # Infrastructure deployment script
-├── deploy-logicapp.ps1          # Logic App workflows deployment script
-├── newmain.bicep                # Bicep template for infrastructure
-├── newmain.bicepparam           # Bicep parameters file
-├── logic-app/                   # Logic App workflows
-│   ├── host.json                # Host configuration
-│   ├── connections.json         # API connections
-│   ├── local.settings.json      # Local development settings
-│   ├── .funcignore              # Files to exclude from deployment
-│   ├── Artifacts/               # Maps and Schemas
-│   ├── HelloWorld/              # Sample workflow
-│   │   └── workflow.json
-│   └── ProcessOrder/            # Order processing workflow
-│       └── workflow.json
-└── infra/                       # Alternative infrastructure files
+azure-logic-apps-devops-demo/
+├── infra/                           # Infrastructure deployment files
+│   ├── infra-deployment-script.ps1  # Infrastructure deployment script
+│   ├── main.bicep                   # Bicep template for infrastructure
+│   └── main.bicepparam              # Bicep parameters file
+└── logicapp-ws/                     # Logic App workspace
+    ├── azure-pipelines.yml          # Azure DevOps CI/CD pipeline
+    ├── deploy-logicapp.ps1          # Logic App workflows deployment script
+    ├── README.md                    # This documentation
+    └── logic-app/                   # Logic App workflows
+        ├── host.json                # Host configuration
+        ├── connections.json         # API connections
+        ├── local.settings.json      # Local development settings
+        ├── Artifacts/               # Maps and Schemas
+        │   ├── Maps/
+        │   └── Schemas/
+        ├── HelloWorld/              # Sample workflow
+        │   └── workflow.json
+        └── ProcessOrder/            # Order processing workflow
+            └── workflow.json
 ```
 
 ## Prerequisites
